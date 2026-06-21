@@ -219,7 +219,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     fetchJobs();
 
-    // Realtime subscription
+    // Realtime subscription.
+    // No server-side filter on buyer_wallet: Supabase postgres_changes evaluates
+    // filters against the WAL record, which for UPDATE events only contains changed
+    // columns + the primary key (PostgreSQL default replica identity). buyer_wallet
+    // is never updated after insert, so it's absent from UPDATE WAL records and the
+    // filter silently drops every status-change event. Instead we subscribe to all
+    // job changes and re-fetch with the wallet scope in the query, which is always
+    // correct regardless of replica identity settings.
     if (jobChannelRef.current) {
       supabase.removeChannel(jobChannelRef.current);
     }
@@ -227,38 +234,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .channel(`jobs:buyer:${lowerWallet}`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'jobs',
-          filter: `buyer_wallet=eq.${lowerWallet}`,
-        },
+        { event: '*', schema: 'public', table: 'jobs' },
         async (payload) => {
           if (payload.eventType === 'DELETE') {
+            // old only contains PK — safe to filter by id regardless of wallet
             setJobs(prev => prev.filter(j => j.id !== (payload.old as any).id));
             return;
           }
-          // INSERT or UPDATE: re-fetch with join for agent data
+          const jobId = (payload.new as any).id;
+          if (!jobId) return;
+          // Re-fetch scoped to this wallet — returns null if job belongs to someone else
           const { data } = await supabase
             .from('jobs')
             .select('*, agents(name, avatar_url, tags)')
-            .eq('id', (payload.new as any).id)
+            .eq('id', jobId)
+            .eq('buyer_wallet', lowerWallet)
             .single();
-          if (data) {
-            const mapped = mapJobFromDb(data);
-            setJobs(prev => {
-              const idx = prev.findIndex(j => j.id === mapped.id);
-              if (idx !== -1) {
-                const next = [...prev];
-                next[idx] = mapped;
-                return next;
-              }
-              return [mapped, ...prev];
-            });
-          }
+          if (!data) return; // not this wallet's job
+          const mapped = mapJobFromDb(data);
+          setJobs(prev => {
+            const idx = prev.findIndex(j => j.id === mapped.id);
+            if (idx !== -1) {
+              const next = [...prev];
+              next[idx] = mapped;
+              return next;
+            }
+            return [mapped, ...prev];
+          });
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (err) console.error('[ArcHire] Realtime subscribe error:', err.message);
+        else console.log('[ArcHire] Realtime status:', status, 'wallet:', lowerWallet.slice(0, 8));
+      });
 
     jobChannelRef.current = channel;
     return () => {
