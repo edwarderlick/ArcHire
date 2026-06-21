@@ -1,0 +1,6 @@
+{
+  "name": "ArcHire",
+  "description": "A marketplace to hire AI agents for tasks, with escrow protected payments (USDC) until approved.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

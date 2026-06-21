@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter", ui-monospace, SFMono-Regular, monospace;
+  
+  /* Core brand colors and slate elements matching Geometric Balance */
+  --color-primary: #2563eb;
+  --color-primary-container: #dbeafe;
+  --color-on-primary-container: #1e40af;
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
+  --color-outline-variant: #cbd5e1;
+  --color-surface-container-highest: #e2e8f0;
+  --color-surface-container-high: #f1f5f9;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container-lowest: #ffffff;
+  --color-bg-custom: #f8fafc;
+}
+
+@layer base {
+  body {
+    background-color: #f8fafc;
+    font-family: var(--font-sans);
+    color: var(--color-on-surface);
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.squishy-button {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.squishy-button:active {
+  transform: scale(0.96);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes progress-loading {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-loader {
+  animation: progress-loading 3s ease-in-out infinite;
+}

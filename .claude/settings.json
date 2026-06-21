@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\ArcHire\\\\contracts\\\\contracts\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\ArcHire\\\\contracts\\\\scripts\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\ArcHire\\\\supabase\\\\functions\\\\start-job\")"
+    ]
+  }
+}
